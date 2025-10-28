@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="/css/style.css">
+    </head>
+    <body>
+        <div class="categories">
+            <div name="cat1">Math</div>
+            <div name="cat2">Mythology</div>
+            <div name="cat3">Board Games</div>
+            <div name="cat4">Vehicles</div>
+            <div name="cat5">Film</div>
+            <div name="cat6">Computer Science</div>
+        </div>
+
+        <div class="questions">
+            <div id="1" onClick="squareClick(event)" name="1100">200</div>
+            <div id="2" onClick="squareClick(event)" name="1200">400</div>
+            <div id="3" onClick="squareClick(event)" name="1300">600</div>
+            <div id="4" onClick="squareClick(event)" name="1400">800</div>
+            <div id="5" onClick="squareClick(event)" name="1500">1000</div>
+
+            <div id="6" onClick="squareClick(event)" name="2100">200</div>
+            <div id="7" onClick="squareClick(event)" name="2200">400</div>
+            <div id="8" onClick="squareClick(event)" name="2300">600</div>
+            <div id="9" onClick="squareClick(event)" name="2400">800</div>
+            <div id="10" onClick="squareClick(event)" name="2500">1000</div>
+
+            <div id="11" onClick="squareClick(event)" name="3100">200</div>
+            <div id="12" onClick="squareClick(event)" name="3200">400</div>
+            <div id="13" onClick="squareClick(event)" name="3300">600</div>
+            <div id="14" onClick="squareClick(event)" name="3400">800</div>
+            <div id="15" onClick="squareClick(event)" name="3500">1000</div>
+
+            <div id="16" onClick="squareClick(event)" name="4100">200</div>
+            <div id="17" onClick="squareClick(event)" name="4200">400</div>
+            <div id="18" onClick="squareClick(event)" name="4300">600</div>
+            <div id="19" onClick="squareClick(event)" name="4400">800</div>
+            <div id="20" onClick="squareClick(event)" name="4500">1000</div>
+
+            <div id="21" onClick="squareClick(event)" name="5100">200</div>
+            <div id="22" onClick="squareClick(event)" name="5200">400</div>
+            <div id="23" onClick="squareClick(event)" name="5300">600</div>
+            <div id="24" onClick="squareClick(event)" name="5400">800</div>
+            <div id="25" onClick="squareClick(event)" name="5500">1000</div>
+
+            <div id="26" onClick="squareClick(event)" name="6100">200</div>
+            <div id="27" onClick="squareClick(event)" name="6200">400</div>
+            <div id="28" onClick="squareClick(event)" name="6300">600</div>
+            <div id="29" onClick="squareClick(event)" name="6400">800</div>
+            <div id="30" onClick="squareClick(event)" name="6500">1000</div>
+
+
+
+        </div>
+
+        <div class="scoreboard">
+            <div id="player1"> 
+                <h7>Player 1: </h7> <h7 id="score1">0</h7>
+                <button onclick="updateScore(event)" id="player1+"> + </button>
+                <button onclick="updateScore(event)" id="player1-"> - </button>
+            </div>
+            <div id="player2"> 
+                <h7>Player 2: </h7> <h7  id="score2">0</h7>
+                <button onclick="updateScore(event)" id="player2+"> + </button>
+                <button onclick="updateScore(event)" id="player2-"> - </button>
+            </div>
+            <div id="player3"> 
+                <h7>Player 3: </h7> <h7 id="score3">0</h7>
+                <button onclick="updateScore(event)" id="player3+"> + </button>
+                <button onclick="updateScore(event)" id="player3-"> - </button>
+            </div>
+        </div>
+
+        <button onclick="reset()" id="reset"> Reset</button>
+
+
+        <script src="/js/script.js"></script>
+    </body>
+</html> 
