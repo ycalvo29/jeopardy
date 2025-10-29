@@ -1,15 +1,28 @@
 type Query  {
-   tasks: [Task]
+   question(id: ID!): Question
+   scores: [Score]
+   playedSquares:[Square]
 }
 
-type Task{
+type Score{
+   player1: Int
+   player2: Int
+   player3: Int 
+}
+type Question{
    id: Int
-   name: String!
    completed: Int
-
+   question: String
+   answer: String
+   choice1: String
+   choice2: String
+   choice3: String
 }
+type Square{
+   id: Int
+}
+
 type Mutation {
-   createTask(name: String!):String
-   deleteTask(id: String!):String
-   
+   updateScore(task: String!):String
+   reset:String
 }

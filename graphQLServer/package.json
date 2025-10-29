@@ -1,6 +1,7 @@
 {
     "name": "hello-world-server",
     "private": true,
+    "type": "module",
     "scripts": {
         "start": "nodemon --ignore data/ server.js"
     },

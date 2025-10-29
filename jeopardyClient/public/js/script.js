@@ -1,5 +1,4 @@
 
-
 function squareClick(event) {
     id = event.target.getAttribute('id');
     document.getElementById(id).setAttribute("backgroundColor", "white");
@@ -14,140 +13,96 @@ function squareClick(event) {
     xhr.open("GET", target, params, true);
     xhr.setRequestHeader("Content-type", "application/json");
     xhr.send();
+
     window.location.href = target;
-    
 }
 
-window.onload = (event) => {
-    getScores();
+function getScores(){
 
     let xhr = new XMLHttpRequest();
-    const target = new URL('http://localhost:4000/playedSquares');
-    xhr.open("GET", target, true);
+    const target = new URL('http://localhost:9000/graphql');
+    xhr.open("POST", target, true);
     xhr.setRequestHeader("Content-type", "application/json");
-    xhr.send();
+    let query = "{scores{player1 player2 player3}}";
+    const payload = JSON.stringify({query: query});
+    xhr.send(payload);
+
+
+    xhr.onreadystatechange = function (){
+    if(this.readyState ==4 && this.status == 200){
+
+        let res = JSON.parse(this.response).data.scores;
+
+        console.log(res);
+
+        player1Score = document.getElementById("score1");
+        player1Score.innerHTML = res[0].player1;
+
+        player2Score = document.getElementById("score2");
+        player2Score.innerHTML = res[0].player2;
+
+        player3Score = document.getElementById("score3");
+        player3Score.innerHTML = res[0].player3;
+    }
+  } 
+};    
+
+
+window.onload = (event) => {
+
+    let xhr = new XMLHttpRequest();
+    const target = 'http://localhost:9000/graphql';
+    xhr.open("POST", target, true);
+    xhr.setRequestHeader("Content-type", "application/json");
+    const query = "{playedSquares{id}}";
+    let jsonPayload = JSON.stringify({query: query});
+    console.log(jsonPayload);
+
+    xhr.send(jsonPayload);
 
     xhr.onreadystatechange = function (){
         if(this.readyState ==4 && this.status == 200){
             console.log(this.response);
-            let squares = JSON.parse(this.response);
+            let squares = JSON.parse(this.response).data.playedSquares;
             squares.forEach(element => {
                 console.log(element.id);
                 document.getElementById(element.id).innerHTML = "";
             });
         }
     } 
-    //event.preventDefault();
+    getScores();
 };
 
 function updateScore(event){
     let task = event.target.id;
     let player = event.target.parentElement.id;
-    console.log("player" + player);
 
     let xhr = new XMLHttpRequest();
-    
-    let url = "http://localhost:4000/updateScore";
-    xhr.open("POST", url, true);
+    const target = 'http://localhost:9000/graphql';
+    xhr.open("POST", target, true);
     xhr.setRequestHeader("Content-type", "application/json");
-    const dataToSend = {"task": task};
-    const jsonPayload = JSON.stringify(dataToSend);
+    let query = {
+            query: 'mutation UpdateScore($name: String!){ \n updateScore(task: $name) \n}',
+            variables : {name:task},
+    };                      
+
+    const jsonPayload = JSON.stringify(query);
+    console.log(jsonPayload);      
     xhr.send(jsonPayload);
-
     getScores();
-function getScores(event){
-
-    let xhr = new XMLHttpRequest();
-    const target = new URL('http://localhost:4000/getScores');
-    xhr.open("GET", target, true);
-    xhr.setRequestHeader("Content-type", "application/json");
-    xhr.send();
-
-
-    xhr.onreadystatechange = function (){
-    if(this.readyState ==4 && this.status == 200){
-
-        let res = JSON.parse(this.response);
-
-        console.log(res);
-
-        player1Score = document.getElementById("score1");
-        player1Score.innerHTML = res[0].player1;
-
-        player2Score = document.getElementById("score2");
-        player2Score.innerHTML = res[0].player2;
-
-        player3Score = document.getElementById("score3");
-        player3Score.innerHTML = res[0].player3;
-    }
-  } 
-};
-function getScores(event){
-
-    let xhr = new XMLHttpRequest();
-    const target = new URL('http://localhost:4000/getScores');
-    xhr.open("GET", target, true);
-    xhr.setRequestHeader("Content-type", "application/json");
-    xhr.send();
-
-
-    xhr.onreadystatechange = function (){
-    if(this.readyState ==4 && this.status == 200){
-
-        let res = JSON.parse(this.response);
-
-        console.log(res);
-
-        player1Score = document.getElementById("score1");
-        player1Score.innerHTML = res[0].player1;
-
-        player2Score = document.getElementById("score2");
-        player2Score.innerHTML = res[0].player2;
-
-        player3Score = document.getElementById("score3");
-        player3Score.innerHTML = res[0].player3;
-    }
-  } 
 };
 
-
-    
-};
-
-function getScores(event){
-
-    let xhr = new XMLHttpRequest();
-    const target = new URL('http://localhost:4000/getScores');
-    xhr.open("GET", target, true);
-    xhr.setRequestHeader("Content-type", "application/json");
-    xhr.send();
-
-
-    xhr.onreadystatechange = function (){
-    if(this.readyState ==4 && this.status == 200){
-
-        let res = JSON.parse(this.response);
-
-        console.log(res);
-
-        player1Score = document.getElementById("score1");
-        player1Score.innerHTML = res[0].player1;
-
-        player2Score = document.getElementById("score2");
-        player2Score.innerHTML = res[0].player2;
-
-        player3Score = document.getElementById("score3");
-        player3Score.innerHTML = res[0].player3;
-    }
-  } 
-};
 
 function reset(){
     let xhr = new XMLHttpRequest();
-    const target = new URL('http://localhost:4000/reset');
-    xhr.open("GET", target, true);
+    const target = new URL('http://localhost:9000/graphql');
+    xhr.open("POST", target, true);
     xhr.setRequestHeader("Content-type", "application/json");
-    xhr.send(); 
+    const query = "mutation{reset}";
+    let jsonPayload = JSON.stringify({query: query});
+    console.log(jsonPayload);
+
+    xhr.send(jsonPayload);
     location.reload();
 
 };
