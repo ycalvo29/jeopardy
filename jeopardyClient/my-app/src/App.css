@@ -1,0 +1,143 @@
+.board{
+    margin-left: 2vh;
+    margin-right: 2vh;
+    height: 60vh;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows:repeat(5, 1fr);
+    grid-template-columns: repeat(6, 2fr);
+    column-gap: 3px;
+    row-gap: 3px;
+    background:  #000f51;
+
+    justify-content: center;
+}
+.unplayedSquare{
+    display: flex;
+    font-size: 50px;
+    font-weight: bold;
+    font-family: "Optima";
+    justify-content: center;
+    align-items: center;                       
+    background-color:rgba(0, 29, 161);
+    color: rgb(246, 177, 80);
+    text-align: center;
+}
+.playedSquare{
+    display: flex;
+    background-color:rgba(0, 29, 161);
+    color: transparent;
+
+}
+.QuestionPage{
+    border: 4vh solid #000f51;
+    border-radius: 10vh;
+    background-color: rgba(0, 29, 161);
+
+}
+.Question{
+
+    height: 22vh;
+    font-size:7vh;
+    
+    font-family: "ITC Korinna";
+    justify-content: center;
+    align-items: center;
+    background-color:rgba(0, 29, 161);
+    color: white;
+    text-align: center;
+
+}
+.AnswerVis{
+    height: 23vh;
+    font-size:7vh;
+    
+    font-family: "ITC Korinna";
+    justify-content: center;
+    align-items: center;
+    background-color:rgba(0, 29, 161);
+    color: white;
+    text-align: center;
+
+}
+
+.AnswerHid{
+    height:25vh;
+    font-size:60px;
+    font-weight: bold;
+    font-family: "ITC Korinna";
+    justify-content: center;
+    align-items: center;
+    background-color:rgba(0, 29, 161);
+    color: transparent;
+    text-align: center;
+
+}
+.categories > div{
+    font-size: 25px;
+    font-weight: bold;
+    font-family: "ITC Korinna";
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(30, 51, 146);
+    color:white;
+    text-align: center;
+}
+.categories {
+    margin-top: 2vh;
+    margin-left: 2vh;
+    margin-right: 2vh;
+    height: 12vh;
+    display: grid;
+    column-gap: 3px;
+    grid-template-rows:repeat(1, 1fr);
+    grid-template-columns: repeat(6, 1fr);
+    row-gap: 1vh;
+    
+  }
+
+.resetButton {
+    margin-top: 2vh;
+    margin-left: 2vh;
+    font-size: 25px;
+    font-weight: bold;
+    font-family: "ITC Korinna";
+    background-color: white;
+    color: rgb(30, 51, 146);
+    border-radius: 25px;
+    width: 100px;
+    height: 5vh;
+
+}
+
+.scoreboard > div{
+    margin: 2vh;
+    display: flex;
+    flex-direction: row;
+    color: white;
+    justify-content: left;
+    align-items: center;
+    border-radius: 60 px;
+    height: 2vh;
+}
+.scoreboard > div > h7{
+    margin-right: 20px;
+    font-size: 25px;
+    font-weight: bold;
+    font-family: "ITC Korinna";
+    color: white;
+
+}
+.scoreboard > div > button{
+    font-size: 25px;
+    margin-left: 2vh;
+    font-weight: bold;
+    font-family: "ITC Korinna";
+    background-color: white;
+    color: rgb(30, 51, 146);
+    border-radius: 14px;
+    width: 50px;
+    height: 1fr;
+
+}

@@ -19,10 +19,10 @@ type Question{
    choice3: String
 }
 type Square{
-   id: Int
+   completed: Int
 }
 
 type Mutation {
-   updateScore(task: String!):String
+   updateScore(player: String!, score: Int):String
    reset:String
 }

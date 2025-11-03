@@ -57,35 +57,13 @@ function getQuestion(root,args,context,info){
 
 function updateScore(root,args,context,info){
 
-    let task: string = args.task;
-    console.log(task)
+    //let task: string = args.task;
+    //console.log(task)
     let updateQuery: string = '';
 
-    switch(task){
-        case "player1+":
-            updateQuery = "UPDATE scores SET player1 = player1 + 200";
-            break;
 
-        case "player1-":
-            updateQuery = "UPDATE scores SET player1 = player1 - 200";
-            break;
+    updateQuery = "UPDATE scores SET " + args.player + " = " + args.score + ";";
 
-        case "player2+":
-            updateQuery = "UPDATE scores SET player2 = player2 + 200";
-            break;
-
-        case "player2-":
-            updateQuery = "UPDATE scores SET player2 = player2 - 200";
-            break;
-
-        case "player3+":
-            updateQuery = "UPDATE scores SET player3 = player3 + 200";
-            break;
-
-        case "player3-":
-            updateQuery = "UPDATE scores SET player3 = player3 - 200";
-            break;
-    }
     return new Promise((resolve, reject) => {
       con.query(updateQuery, (error, results) => {
           if (error) reject(error);
@@ -142,9 +120,9 @@ function completeSquare(id:number){
 async function getPlayedSquares(root,args,context,info){
 
    return new Promise((resolve, reject) => {
-      con.query('SELECT id from squares WHERE completed = 1;', (error, results) => {
+      con.query('SELECT completed from squares;', (error, results) => {
           if (error) reject(error);
-          //console.log(results);
+          console.log(results);
           resolve(results);
       });
   });
