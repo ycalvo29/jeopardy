@@ -5,7 +5,7 @@
     display: grid;
     grid-auto-flow: column;
     grid-template-rows:repeat(5, 1fr);
-    grid-template-columns: repeat(6, 2fr);
+    grid-template-columns: repeat(6, 1fr);
     column-gap: 3px;
     row-gap: 3px;
     background:  #000f51;
@@ -140,4 +140,49 @@
     width: 50px;
     height: 1fr;
 
+}
+.Home{
+    background:  #000f51;
+    width:  100vw;
+    height: 100vh;
+    
+
+
+}
+.Home > button{
+    margin-top: 20vh;
+    margin-left: 20vh;
+    font-size: 25px;
+    font-weight: bold;
+    font-family: "ITC Korinna";
+    background-color: white;
+    color: rgb(30, 51, 146);
+    border-radius: 25px;
+    width: 20vw;
+    height: 10vh;
+
+
+}
+
+
+.newGame{
+    margin: 20vh;
+    color: white;
+    justify-content: left;
+    align-items: left;
+    border-radius: 60 px;
+    height: 50vh;
+    font-size: 25px;
+    font-weight: bold;
+    font-family: "ITC Korinna";
+
+}
+.newGame > form {
+    margin-top: 5vh;
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-rows:repeat(6 1fr);
+    grid-template-columns: repeat(1 1fr);
+    column-gap: 3px;
+    row-gap: 3px;
 }

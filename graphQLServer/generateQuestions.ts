@@ -1,7 +1,6 @@
 
 import mysql2, { type Connection } from 'mysql2';
-import fetch from "node-fetch";
-import fs from 'fs';
+import fetch from "node-fetch"; 
 
 let con = mysql2.createConnection({
    host: "localhost",
@@ -16,7 +15,6 @@ con.connect(function(err) {
 
 var trivia: object[] = [];
 
-//let trivia: [object, object, object, object, object] = [{},{},{},{}, {}];
 let categories: [number, number, number, number, number, number] = [19, 20, 16,28,11,18];
 var categoryNames:string[] = [];
 
@@ -118,7 +116,6 @@ async function generateHard(hardURL: string){
                         });
                     });
 
-
             }catch (error: fetch.Response){
                 console.log(error);
             }
@@ -156,7 +153,7 @@ function handleError(error: fetch.Response){
 
 con.query("TRUNCATE TABLE squares");
 
-
+/*
 setTimeout(function () {
     console.log("DONE!");
     console.log(trivia);
@@ -166,10 +163,17 @@ setTimeout(function () {
         console.error('Error writing file:', err);
     }})}, 127000);
 
-categories.forEach(number => {
+*/
+
+function generateGame(categories: number[]){
+    categories.forEach(number => {
     console.log(number);
     generateCategory(number);
         
 });
 
+}
 
+//generateGame([9, 10, 11, 13, 14, 15]);
+
+export {generateGame};

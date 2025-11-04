@@ -3,10 +3,12 @@ import cors from 'cors';
 import express from 'express';
 import path, { resolve } from 'path';
 import mysql2 from 'mysql2';
+import type {RowDataPacket} from "mysql2/promise";
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import {makeExecutableSchema} from 'graphql-tools';
 import {graphiqlExpress,graphqlExpress} from 'apollo-server-express';
+//import { generateGame } from './generateQuestions.ts';
 
 const __dirname: string = path.dirname(fileURLToPath(import.meta.url));
 const port = process.env.PORT || 9000;
@@ -16,7 +18,8 @@ let con = mysql2.createConnection({
    host: "localhost",
    user: "root",
    password: "watchFactory",
-   database: "jeopardy"
+   database: "jeopardy",
+   rowsAsArray: true,
 });
 
 
@@ -37,25 +40,31 @@ function getHTML(req: express.Request, res: express.Response){
     res.render('index');
 }
 
-function getQuestion(root,args,context,info){
+function getQuestion(_root:any ,args: {id: number},_context: any, _info: any){
     //const trivia: object[] = await getSquares();
-    const id: number = Number(args.id);
+    let id:number = args.id;
 
-    console.log("id: " + id);
+    //console.log("id: " + id);
     completeSquare(id);
 
 
     return new Promise((resolve, reject) => {
-      con.query('SELECT question, answer FROM squares WHERE ID = ?;', id, (error, results) => {
+      con.query<RowDataPacket[]>('SELECT question, answer FROM squares WHERE ID = ?;', id, (error, rows) => {
           if (error) reject(error);
-          console.log(results);
-          resolve(results[0]);
+        
+          //let data = rows !== null && rows !== undefined ? rows : [["", ""]];
+            if (rows[0] != undefined){
+                resolve({question: rows[0][0], answer: rows[0][1]});
+            }else{
+                resolve({question: "", answer: ""})
+            }
+          
       });
   });
 
 }
 
-function updateScore(root,args,context,info){
+function updateScore(_root:any,args: {player: string, score: number},_context: any, _info:any){
 
     //let task: string = args.task;
     //console.log(task)
@@ -72,19 +81,25 @@ function updateScore(root,args,context,info){
     });
 }
 
-async function getScores(root,args,context,info){
+async function getScores(_root:any,_args: any,_context: any, _info:any){
 
    return new Promise((resolve, reject) => {
-      con.query('SELECT * FROM scores;', (error, results) => {
+      con.query<RowDataPacket[]>('SELECT * FROM scores;', (error, rows) => {
           if (error) reject(error);
-          //console.log(results);
-          resolve(results);
+
+
+           if(rows[0] != undefined){
+            resolve([{player1: rows[0][0], player2: rows[0][1], player3: rows[0][2]}]);
+           }else{
+            resolve([{player1: null, player2: null, player3: null}]);
+           }
+          
       });
   });
 
 }
 
-async function reset(root,args,context,info){
+async function reset(_root:any,_args: any,_context: any, _info:any){
 
    let truncateScores =  new Promise((resolve, reject) => {
       con.query('TRUNCATE TABLE scores;', (error, results) => {
@@ -117,10 +132,26 @@ function completeSquare(id:number){
   });
 }
 
-async function getPlayedSquares(root,args,context,info){
+async function getPlayedSquares(_root:any,_args: any,_context: any, _info:any){
 
    return new Promise((resolve, reject) => {
-      con.query('SELECT completed from squares;', (error, results) => {
+      con.query<RowDataPacket[]>('SELECT completed from squares;', (error, rows) => {
+          if (error) reject(error);
+          //console.log(rows);
+          let result: {completed: number}[] = [];
+          //let data: [[number]];
+          rows.forEach((square) => result.push({completed: square[0]}));
+          console.log(result);
+          resolve(result);
+      });
+  });
+
+}
+
+async function getCategories(_root:any,_args: any,_context: any, _info:any){
+
+   return new Promise((resolve, reject) => {
+      con.query('SELECT * from categories;', (error, results) => {
           if (error) reject(error);
           console.log(results);
           resolve(results);
@@ -128,16 +159,42 @@ async function getPlayedSquares(root,args,context,info){
   });
 
 }
+function setCategories(_root:any, args: {categories :[string]},_context: any, _info:any){
 
-const resolvers = {
+
+    let updateQuery: string = '';
+    const categories = args.categories;
+
+
+    updateQuery = "UPDATE categories SET category1 = ?, category2 = ?,category3 = ?,category4 = ?,category5 = ?,category6 = ?;";
+    return new Promise((resolve, reject) => {
+      con.query(updateQuery, [...categories], (error, results) => {
+          if (error) reject(error);
+          resolve(results);
+      });
+    });
+}
+
+async function generateQuestions(_root:any,_args: any,_context: any, _info:any){
+    
+    //const categories = [args.category1, args.category2 ,args.category3,args.category4 ,args.category5 ,args.category6];
+    console.log("categories:");
+    //await generateGame(categories);
+
+}
+
+const resolvers: {} = {
    Query: {
       question: getQuestion,
       scores: getScores,
-      playedSquares: getPlayedSquares
+      playedSquares: getPlayedSquares,
+      categories: getCategories
    },
    Mutation:{
       updateScore: updateScore,
-      reset: reset
+      reset: reset,
+      generateQuestions: generateQuestions,
+      setCategories: setCategories
    }
 };
 

@@ -1,5 +1,6 @@
 import './App.css';
 import { useEffect, useState} from 'react';
+//import { generateGame } from './generateQuestions.ts';
 
 function Square({id, value, completed, setSquareClicked, setID}) {
 
@@ -112,17 +113,17 @@ function ScoreBoard(){
     <>
     <div className="scoreboard">
       <div id="player1"> 
-          <h7>Player 1: </h7> <h7 id="score1">{player1Score}</h7>
+          <h7 contentEditable="true">Player 1: </h7> <h7 id="score1">{player1Score}</h7>
           <button onClick={updateScore1Plus} id="player1+"> + </button>
           <button onClick={updateScore1Minus} id="player1-"> - </button>
       </div>
       <div id="player2"> 
-          <h7>Player 2: </h7> <h7  id="score2">{player2Score}</h7>
+          <h7 contentEditable="true">Player 2: </h7> <h7  id="score2">{player2Score}</h7>
           <button onClick={updateScore2Plus} id="player2+"> + </button>
           <button onClick={updateScore2Minus} id="player2-"> - </button>
       </div>
       <div id="player3"> 
-          <h7>Player 3: </h7> <h7 id="score3">{player3Score}</h7>
+          <h7 contentEditable="true">Player 3: </h7> <h7 id="score3">{player3Score}</h7>
           <button onClick={updateScore3Plus} id="player3+"> + </button>
           <button onClick={updateScore3Minus} id="player3-"> - </button>
       </div>
@@ -175,14 +176,12 @@ function Board({setSquareClicked, setID }){
     xhr.onreadystatechange = function (){
         if(this.readyState === 4 && this.status === 200){
             let squares = JSON.parse(this.response).data.playedSquares;
+            console.log("SQUARES");
+            console.log(squares);
             setPlayedSquares(squares);
         }
     }  
   },[]);
-
-
-
-
 
 
   function resetButton(){
@@ -308,7 +307,7 @@ function Question({setSquareClicked, id}){
 
 function Game(){
 
-  const [squareClicked, setSquareClicked] = useState(false)
+  const [squareClicked, setSquareClicked] = useState(false);
   const [id, setID] = useState(0);
 
   return (
@@ -319,4 +318,138 @@ function Game(){
 
   );
 }
-export default Game
+function SetupScreen ({startGame}){
+
+  const categories = JSON.parse("{\"trivia_categories\":[{\"id\":9,\"name\":\"General Knowledge\"},{\"id\":10,\"name\":\"Entertainment: Books\"},{\"id\":11,\"name\":\"Entertainment: Film\"},{\"id\":12,\"name\":\"Entertainment: Music\"},{\"id\":13,\"name\":\"Entertainment: Musicals & Theatres\"},{\"id\":14,\"name\":\"Entertainment: Television\"},{\"id\":15,\"name\":\"Entertainment: Video Games\"},{\"id\":16,\"name\":\"Entertainment: Board Games\"},{\"id\":17,\"name\":\"Science & Nature\"},{\"id\":18,\"name\":\"Science: Computers\"},{\"id\":19,\"name\":\"Science: Mathematics\"},{\"id\":20,\"name\":\"Mythology\"},{\"id\":21,\"name\":\"Sports\"},{\"id\":22,\"name\":\"Geography\"},{\"id\":23,\"name\":\"History\"},{\"id\":24,\"name\":\"Politics\"},{\"id\":25,\"name\":\"Art\"},{\"id\":26,\"name\":\"Celebrities\"},{\"id\":27,\"name\":\"Animals\"},{\"id\":28,\"name\":\"Vehicles\"},{\"id\":29,\"name\":\"Entertainment: Comics\"},{\"id\":30,\"name\":\"Science: Gadgets\"},{\"id\":31,\"name\":\"Entertainment: Japanese Anime & Manga\"},{\"id\":32,\"name\":\"Entertainment: Cartoon & Animations\"}]}")["trivia_categories"];
+  
+  const [category1, setCategory1] = useState(9);
+  const [category2, setCategory2] = useState(9);
+  const [category3, setCategory3] = useState(9);
+  const [category4, setCategory4] = useState(9);
+  const [category5, setCategory5] = useState(9);
+  const [category6, setCategory6] = useState(9);
+  const [submit, setSubmit] = useState("false");
+  
+  function handleChange1(e){
+    setCategory1(e.target.value);
+    console.log(e.target.value);
+
+    //console.log(category1);
+  }
+    function handleChange2(e){
+    setCategory2(e.target.value);
+  }
+    function handleChange3(e){
+    setCategory3(e.target.value);
+  }
+    function handleChange4(e){
+    setCategory4(e.target.value);
+  }
+    function handleChange5(e){
+    setCategory5(e.target.value);
+  }
+    function handleChange6(e){
+    setCategory6(e.target.value);
+  }
+  function handleSubmit(){
+    setSubmit(true);
+  }
+
+    useEffect(() => {
+    const target = 'http://localhost:9000/graphql';
+
+    let xhr = new XMLHttpRequest(); 
+    xhr.open("POST", target, true);
+    xhr.setRequestHeader("Content-type", "application/json");
+    let query = {query: 'mutation{setCategories(categories :["2", "2","3", "4", "5", "6"])} '};                      
+    let jsonPayload = JSON.stringify(query);
+    xhr.send(jsonPayload);
+
+    xhr.onreadystatechange = function () {
+    if (this.readyState === 4 && this.status === 200) {
+        console.log(this.response);
+    }}
+    }, [submit]);
+
+
+  /* mutation{
+  setCategories(categories :["1", "2","3", "4", "5", "6"])
+  } 
+  */
+
+  /*{
+  categories
+  }*/
+  //console.log(categories);
+  return(
+    <>
+      <div className='Home'>
+        <button onClick={startGame}> Resume Previous Game? </button>
+          <div className="newGame">
+            <h7>Start New Game: </h7>
+
+            <form name="catForm" id="catForm" onSubmit={handleSubmit}>
+              <div>
+              Category 1: 
+                <select value={category1} onChange={handleChange1}name="category1" id="category1" >
+                  {categories.map((cat) => {return <option value={cat.id} > {cat.name} </option> })}
+                </select>
+              </div>
+              <div>              
+                Category 2: 
+                <select value={category2} onChange={handleChange2} name="category2" id="category2">
+                  {categories.map((cat) => {return <option value={cat.id}> {cat.name} </option> })}
+                </select>
+              </div>
+
+              <div>
+                Category 3: 
+                <select value={category3} onChange={handleChange3} name="category3" id="category3">
+                  {categories.map((cat) => {return <option value={cat.id}> {cat.name} </option> })}
+                </select>
+              </div>
+              <div>
+                Category 4: 
+                <select value={category4} onChange={handleChange4} name="category4" id="category4">
+                  {categories.map((cat) => {return <option value={cat.id}> {cat.name} </option> })}
+                </select>
+              </div>
+              <div>              
+                Category 5: 
+                <select value={category5} onChange={handleChange5} name="category5" id="category5">
+                  {categories.map((cat) => {return <option value={cat.id}> {cat.name} </option> })}
+                </select>
+                
+              </div>
+              <div>
+                Category 6: 
+                <select value={category6} onChange={handleChange6} name="category6" id="category6">
+                  {categories.map((cat) => {return <option value={cat.id}> {cat.name} </option> })}
+                </select>
+              </div>
+                <button type="submit">
+                  Submit
+                </button>
+            </form>
+          </div>
+      </div>
+    </>
+  )
+}
+
+function Home(){
+
+  const[start, setStart] = useState(false);
+  
+  function startGame(){
+    setStart(true);
+  }
+
+  return (
+    <>
+      {start? <Game /> : <SetupScreen startGame={startGame} /> }
+    </>
+
+  );
+}
+export default Home
