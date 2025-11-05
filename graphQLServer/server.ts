@@ -10,6 +10,10 @@ import {makeExecutableSchema} from 'graphql-tools';
 import {graphiqlExpress,graphqlExpress} from 'apollo-server-express';
 //import { generateGame } from './generateQuestions.ts';
 
+
+let x = 1;
+let y: string = x;
+
 const __dirname: string = path.dirname(fileURLToPath(import.meta.url));
 const port = process.env.PORT || 9000;
 const app = express();
@@ -40,27 +44,27 @@ function getHTML(req: express.Request, res: express.Response){
     res.render('index');
 }
 
-function getQuestion(_root:any ,args: {id: number},_context: any, _info: any){
+function getQuestion(_root: unknown ,args: {id: number},_context: any, _info: any){
     //const trivia: object[] = await getSquares();
     let id:number = args.id;
-
     //console.log("id: " + id);
-    completeSquare(id);
+    completeSquare(id); 
+    
 
-
-    return new Promise((resolve, reject) => {
-      con.query<RowDataPacket[]>('SELECT question, answer FROM squares WHERE ID = ?;', id, (error, rows) => {
-          if (error) reject(error);
+    function promiseFunction(resolve: (arg: {question: string, answer: string}) => void, reject : (arg: Error) => void){
+            con.query<RowDataPacket[]>('SELECT question, answer FROM squares WHERE ID = ?;', id, (error, rows) => {
+            if (error) reject(error);
         
-          //let data = rows !== null && rows !== undefined ? rows : [["", ""]];
+            //let data = rows !== null && rows !== undefined ? rows : [["", ""]];
             if (rows[0] != undefined){
                 resolve({question: rows[0][0], answer: rows[0][1]});
             }else{
                 resolve({question: "", answer: ""})
             }
-          
       });
-  });
+
+    }
+    return new Promise(promiseFunction);
 
 }
 
@@ -151,36 +155,77 @@ async function getPlayedSquares(_root:any,_args: any,_context: any, _info:any){
 async function getCategories(_root:any,_args: any,_context: any, _info:any){
 
    return new Promise((resolve, reject) => {
-      con.query('SELECT * from categories;', (error, results) => {
+      con.query<RowDataPacket[]>('SELECT * from categories;', (error, results) => {
           if (error) reject(error);
           console.log(results);
-          resolve(results);
+          resolve(results[0]);
+          //setCategories(results[0]);
       });
   });
 
 }
-function setCategories(_root:any, args: {categories :[string]},_context: any, _info:any){
+function setQuestions(args:[number]){
 
+    //let query1: string = '';
+    const categories = args;
+    //const categories = [9, 10, 11, 12, 13, 14];
 
-    let updateQuery: string = '';
-    const categories = args.categories;
-
-
-    updateQuery = "UPDATE categories SET category1 = ?, category2 = ?,category3 = ?,category4 = ?,category5 = ?,category6 = ?;";
-    return new Promise((resolve, reject) => {
-      con.query(updateQuery, [...categories], (error, results) => {
-          if (error) reject(error);
-          resolve(results);
-      });
+    console.log(categories);
+    let insertQuery = "INSERT INTO squares(completed, question, answer, choice1, choice2, choice3, category) SELECT 0, question, answer, choice1, choice2, choice3, cat_name FROM Question_Bank WHERE cat_id = ?;";
+    new Promise((resolve, reject) => {
+        con.query<RowDataPacket[]>("TRUNCATE TABLE squares;",(error, _rows) => {
+            if (error) reject(error);
+        });
+        });
+    //let count: number = 1;
+    categories.forEach((cat) => {
+        new Promise((resolve, reject) => {
+            con.query<RowDataPacket[]>(insertQuery, cat, (error, rows) => {
+                if (error) reject(error);
+                console.log(rows);
+            });
+            //count+=5;
+        });
+    });
+    new Promise((resolve, reject) => {
+        con.query<RowDataPacket[]>("SET  @num := 0;", (error, rows) => {
+            if (error) reject(error);
+            console.log(rows);
+        });
+    });
+    new Promise((resolve, reject) => {
+        con.query<RowDataPacket[]>("UPDATE squares SET id = @num := (@num+1);", (error, rows) => {
+            if (error) reject(error);
+            console.log(rows);
+        });
     });
 }
+function setCategories(_root: unknown, args: {categories: [number]},_context: any, _info:any){
 
-async function generateQuestions(_root:any,_args: any,_context: any, _info:any){
-    
-    //const categories = [args.category1, args.category2 ,args.category3,args.category4 ,args.category5 ,args.category6];
-    console.log("categories:");
-    //await generateGame(categories);
+    let Query: string = '';
+    console.log(args.categories);
+    const categories = args.categories;
+    //const categories = [9, 10, 11, 12, 13, 14];
 
+    console.log("SET CATEGORIES");
+    console.log(categories);
+    Query = "UPDATE categories SET category1 = ?, category2 = ?,category3 = ?,category4 = ?,category5 = ?,category6 = ?;";
+
+
+
+    return new Promise((resolve, reject) => {
+      con.query<RowDataPacket[]>(Query, [...categories], (error, rows) => {
+          if (error) reject(error);
+          resolve(rows);
+          if(rows != undefined){
+            console.log(rows)
+            setQuestions(categories);
+          }else{
+            setQuestions([]);
+          }
+          
+      });
+    });
 }
 
 const resolvers: {} = {
@@ -193,7 +238,6 @@ const resolvers: {} = {
    Mutation:{
       updateScore: updateScore,
       reset: reset,
-      generateQuestions: generateQuestions,
       setCategories: setCategories
    }
 };
