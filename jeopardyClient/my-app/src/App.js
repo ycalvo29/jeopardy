@@ -253,8 +253,8 @@ function Board({ setSquareClicked, setID, category1, category2, category3, categ
 
 function Question({ setSquareClicked, id }) {
 
-  const [question, setQuestion] = useState("What is the square root of 64");
-  const [answer, setAnswer] = useState("8");
+  const [question, setQuestion] = useState(null);
+  const [answer, setAnswer] = useState(null);
   const [answerVis, setAnswerVis] = useState("AnswerHid");
   const [firstClick, setFirstClick] = useState(true);
 
@@ -276,15 +276,17 @@ function Question({ setSquareClicked, id }) {
     let xhr = new XMLHttpRequest();
     xhr.open("POST", target, true);
     xhr.setRequestHeader("Content-type", "application/json");
-    let query = { query: '{ \n question(id : ' + id + ') {\n question answer \n} \n}' };
+    let query = { query: '{question(id : ' + id + ') {question answer }}' };
     let jsonPayload = JSON.stringify(query);
     xhr.send(jsonPayload);
+    //alert(jsonPayload);
 
     xhr.onreadystatechange = function () {
       if (this.readyState === 4 && this.status === 200) {
         console.log(this.response);
 
         let response = JSON.parse(this.response);
+        //alert(JSON.parse(this.response));
         setQuestion(response.data.question.question);
         setAnswer(response.data.question.answer);
       }
@@ -318,27 +320,27 @@ function Game({ category1, category2, category3, category4, category5, category6
 function SetupScreen({ category1, category2, category3, category4, category5, category6, setCategory1, setCategory2, setCategory3, setCategory4, setCategory5, setCategory6, startGame }) {
 
   const categories = JSON.parse("{\"trivia_categories\":[{\"id\":9,\"name\":\"General Knowledge\"},{\"id\":10,\"name\":\"Entertainment: Books\"},{\"id\":11,\"name\":\"Entertainment: Film\"},{\"id\":12,\"name\":\"Entertainment: Music\"},{\"id\":13,\"name\":\"Entertainment: Musicals & Theatres\"},{\"id\":14,\"name\":\"Entertainment: Television\"},{\"id\":15,\"name\":\"Entertainment: Video Games\"},{\"id\":16,\"name\":\"Entertainment: Board Games\"},{\"id\":17,\"name\":\"Science & Nature\"},{\"id\":18,\"name\":\"Science: Computers\"},{\"id\":19,\"name\":\"Science: Mathematics\"},{\"id\":20,\"name\":\"Mythology\"},{\"id\":21,\"name\":\"Sports\"},{\"id\":22,\"name\":\"Geography\"},{\"id\":23,\"name\":\"History\"},{\"id\":24,\"name\":\"Politics\"},{\"id\":25,\"name\":\"Art\"},{\"id\":26,\"name\":\"Celebrities\"},{\"id\":27,\"name\":\"Animals\"},{\"id\":28,\"name\":\"Vehicles\"},{\"id\":29,\"name\":\"Entertainment: Comics\"},{\"id\":30,\"name\":\"Science: Gadgets\"},{\"id\":31,\"name\":\"Entertainment: Japanese Anime & Manga\"},{\"id\":32,\"name\":\"Entertainment: Cartoon & Animations\"}]}")["trivia_categories"];
+  //alert(categories[0].id);
 
   const [submit, setSubmit] = useState("false");
 
   function handleChange1(e) {
-    setCategory1(e.target.value);
-    console.log(e.target.value);
+    setCategory1(parseInt(e.target.value));
   }
   function handleChange2(e) {
-    setCategory2(e.target.value);
+    setCategory2(parseInt(e.target.value));
   }
   function handleChange3(e) {
-    setCategory3(e.target.value);
+    setCategory3(parseInt(e.target.value));
   }
   function handleChange4(e) {
-    setCategory4(e.target.value);
+    setCategory4(parseInt(e.target.value));
   }
   function handleChange5(e) {
-    setCategory5(e.target.value);
+    setCategory5(parseInt(e.target.value));
   }
   function handleChange6(e) {
-    setCategory6(e.target.value);
+    setCategory6(parseInt(e.target.value));
   }
   function handleSubmit() {
     setSubmit(true);
@@ -385,6 +387,7 @@ function SetupScreen({ category1, category2, category3, category4, category5, ca
     xhr.open("POST", target, true);
     xhr.setRequestHeader("Content-type", "application/json");
     let query = { query: 'mutation($category1:Int!,$category2:Int!, $category3:Int!, $category4:Int!, $category5:Int!, $category6:Int!) {setCategories(categories :[$category1, $category2,$category3,$category4,$category5, $category6])} ', variables: { category1: category1, category2: category2, category3: category3, category4: category4, category5: category5, category6: category6 } }
+    
     let jsonPayload = JSON.stringify(query);
     xhr.send(jsonPayload);
 
@@ -397,12 +400,6 @@ function SetupScreen({ category1, category2, category3, category4, category5, ca
       }
     }
   }, [submit]);
-
-
- 
-
-
-
 
   return (
     <>

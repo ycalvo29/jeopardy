@@ -1,24 +1,26 @@
-import bodyParser from 'body-parser';
 import cors from 'cors';
-import express from 'express';
+import express, { type Application } from 'express';
 import path, { resolve } from 'path';
-import mysql2 from 'mysql2';
+import mysql2, { type Connection } from 'mysql2';
 import type {RowDataPacket} from "mysql2/promise";
 import { fileURLToPath } from 'url';
-import fs from 'fs';
-import {makeExecutableSchema} from 'graphql-tools';
-import {graphiqlExpress,graphqlExpress} from 'apollo-server-express';
+import { readFileSync } from "fs";
+import { gql } from 'graphql-tag';
+//import {makeExecutableSchema} from 'graphql-tools';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@as-integrations/express5';
 //import { generateGame } from './generateQuestions.ts';
 
 
-let x = 1;
-let y: string = x;
-
 const __dirname: string = path.dirname(fileURLToPath(import.meta.url));
-const port = process.env.PORT || 9000;
+const port: string = process.env.PORT || "9000";
 const app = express();
 
-let con = mysql2.createConnection({
+
+app.use(express.json());
+
+let con: Connection = mysql2.createConnection({
    host: "localhost",
    user: "root",
    password: "watchFactory",
@@ -27,31 +29,53 @@ let con = mysql2.createConnection({
 });
 
 
-con.connect(function(err) {
+con.connect(function(err: mysql2.QueryError | null) {
    if (err) throw err;
 });
 
-app.use(express.static(path.join(__dirname, "/public")));
-app.use(express.json());
 
+// GraphQLFieldResolver<TSource, TArgs, TContext>
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, "/views"));
+/*fieldResolver:
+ *    A resolver function to use when one is not provided by the schema.
+ *    If not provided, the default field resolver is used (which looks for a
+ *    value or method on the source value with the field's name).
+*/
 
+/*
+export declare type GraphQLTypeResolver<TSource, TContext> = (
+  value: TSource,
+  context: TContext,
+  info: GraphQLResolveInfo,
+  abstractType: GraphQLAbstractType,
+) => PromiseOrValue<string | undefined>;
+export declare type GraphQLIsTypeOfFn<TSource, TContext> = (
+  source: TSource,
+  context: TContext,
+  info: GraphQLResolveInfo,
+) => PromiseOrValue<boolean>;
+export declare type GraphQLFieldResolver<
+  TSource,
+  TContext,
+  TArgs = any,
+  TResult = unknown,
+> = (
+  source: TSource,
+  args: TArgs,
+  context: TContext,
+  info: GraphQLResolveInfo,
+) => TResult;
+*/
 
-function getHTML(req: express.Request, res: express.Response){
-    res.status(200);
-    res.render('index');
-}
-
-function getQuestion(_root: unknown ,args: {id: number},_context: any, _info: any){
+function getQuestion(_source: unknown, args: {id: number},_context: unknown, _info: unknown){
     //const trivia: object[] = await getSquares();
     let id:number = args.id;
-    //console.log("id: " + id);
+    console.log("GET QUESTION");
+    console.log("id: " + id);
     completeSquare(id); 
+    console.log(id);
     
-
-    function promiseFunction(resolve: (arg: {question: string, answer: string}) => void, reject : (arg: Error) => void){
+    function questionPromise(resolve: (arg: {question: string, answer: string}) => void, reject : (arg: Error) => void){
             con.query<RowDataPacket[]>('SELECT question, answer FROM squares WHERE ID = ?;', id, (error, rows) => {
             if (error) reject(error);
         
@@ -62,48 +86,43 @@ function getQuestion(_root: unknown ,args: {id: number},_context: any, _info: an
                 resolve({question: "", answer: ""})
             }
       });
-
     }
-    return new Promise(promiseFunction);
-
+    return new Promise(questionPromise);
 }
 
-function updateScore(_root:any,args: {player: string, score: number},_context: any, _info:any){
+async function updateScore(_root:unknown,args: {player: string, score: number},_context: unknown, _info:unknown){
 
     //let task: string = args.task;
     //console.log(task)
     let updateQuery: string = '';
-
-
     updateQuery = "UPDATE scores SET " + args.player + " = " + args.score + ";";
 
     return new Promise((resolve, reject) => {
-      con.query(updateQuery, (error, results) => {
-          if (error) reject(error);
-          resolve(results);
-      });
-    });
+        con.query(updateQuery, (error, results) => {
+            if (error) reject(error);
+            resolve(results);
+        });
+        });
 }
+async function getScores(_root:unknown,_args: unknown,_context: unknown, _info:unknown){
 
-async function getScores(_root:any,_args: any,_context: any, _info:any){
 
-   return new Promise((resolve, reject) => {
-      con.query<RowDataPacket[]>('SELECT * FROM scores;', (error, rows) => {
-          if (error) reject(error);
-
+    function scoresPromise(resolve: (arg:[{player1: number| null, player2: number| null, player3: number| null}] ) => void, reject : (arg: Error) => void){
+            con.query<RowDataPacket[]>('SELECT * FROM scores;',(error, rows) => {
+            if (error) reject(error);
 
            if(rows[0] != undefined){
             resolve([{player1: rows[0][0], player2: rows[0][1], player3: rows[0][2]}]);
            }else{
             resolve([{player1: null, player2: null, player3: null}]);
            }
-          
       });
-  });
+    }
+   return new Promise(scoresPromise);
 
 }
 
-async function reset(_root:any,_args: any,_context: any, _info:any){
+async function reset(_root:unknown,_args: unknown,_context: unknown, _info:unknown){
 
    let truncateScores =  new Promise((resolve, reject) => {
       con.query('TRUNCATE TABLE scores;', (error, results) => {
@@ -136,7 +155,7 @@ function completeSquare(id:number){
   });
 }
 
-async function getPlayedSquares(_root:any,_args: any,_context: any, _info:any){
+async function getPlayedSquares(_root:unknown,_args: unknown,_context: unknown, _info:unknown){
 
    return new Promise((resolve, reject) => {
       con.query<RowDataPacket[]>('SELECT completed from squares;', (error, rows) => {
@@ -152,7 +171,7 @@ async function getPlayedSquares(_root:any,_args: any,_context: any, _info:any){
 
 }
 
-async function getCategories(_root:any,_args: any,_context: any, _info:any){
+async function getCategories(_root:unknown,_args: unknown,_context: unknown, _info:unknown){
 
    return new Promise((resolve, reject) => {
       con.query<RowDataPacket[]>('SELECT * from categories;', (error, results) => {
@@ -164,10 +183,14 @@ async function getCategories(_root:any,_args: any,_context: any, _info:any){
   });
 
 }
-function setQuestions(args:[number]){
+function setQuestions(args:[number]| null){
 
     //let query1: string = '';
     const categories = args;
+
+    if (categories == null){
+        return;
+    }
     //const categories = [9, 10, 11, 12, 13, 14];
 
     console.log(categories);
@@ -200,9 +223,10 @@ function setQuestions(args:[number]){
         });
     });
 }
-function setCategories(_root: unknown, args: {categories: [number]},_context: any, _info:any){
+function setCategories(_root: unknown, args: {categories: [number]},_context: unknown, _info:unknown){
 
     let Query: string = '';
+    console.log("SET CATEGORIES");
     console.log(args.categories);
     const categories = args.categories;
     //const categories = [9, 10, 11, 12, 13, 14];
@@ -210,8 +234,6 @@ function setCategories(_root: unknown, args: {categories: [number]},_context: an
     console.log("SET CATEGORIES");
     console.log(categories);
     Query = "UPDATE categories SET category1 = ?, category2 = ?,category3 = ?,category4 = ?,category5 = ?,category6 = ?;";
-
-
 
     return new Promise((resolve, reject) => {
       con.query<RowDataPacket[]>(Query, [...categories], (error, rows) => {
@@ -221,14 +243,14 @@ function setCategories(_root: unknown, args: {categories: [number]},_context: an
             console.log(rows)
             setQuestions(categories);
           }else{
-            setQuestions([]);
+            setQuestions(null);
           }
           
       });
     });
 }
 
-const resolvers: {} = {
+const resolvers = {
    Query: {
       question: getQuestion,
       scores: getScores,
@@ -241,17 +263,43 @@ const resolvers: {} = {
       setCategories: setCategories
    }
 };
+/*
+const resolvers2 = {
+    Query: {que: (arg1:any,arg2: {
+        [id: string]: number
 
-const typeDefs = fs.readFileSync('./schema.graphql',{encoding:'utf-8'});
-const schema = makeExecutableSchema({typeDefs, resolvers});
+    }, arg3:any) => {
+        var x = arg2.id;
+        x?.toString();
+    }}, 
+    Mutation: {}, 
+   
+};
 
-app.use(cors(), bodyParser.json());
+type myType = {[argument: string]:any};
+const myVar = {id: 1};
+const myVar2: myType = myVar;
+*/
+app.use(cors());
+const typeDefs = gql(
+    readFileSync("schema.graphql", {
+      encoding: "utf-8",
+    })
+  );
 
-app.use('/graphql',graphqlExpress({schema}));
-app.use('/graphiql',graphiqlExpress({endpointURL:'/graphql'}));
 
-app.listen(
-   port, () => console.info(
-      `Server started on port ${port}`
-   )
+const server = new ApolloServer({
+    schema: buildSubgraphSchema({ typeDefs, resolvers }),
+});
+
+await server.start();
+
+app.use(
+  '/graphql',
+    cors(),
+    express.json(),
+    expressMiddleware(server),
 );
+app.listen(port, () => {
+  console.log(`Server is running on port: ${port}`);
+});

@@ -1,18 +1,19 @@
-import bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import path from 'path';
 import mysql2 from 'mysql2';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
-import { makeExecutableSchema } from 'graphql-tools';
-import { graphiqlExpress, graphqlExpress } from 'apollo-server-express';
+import { readFileSync } from "fs";
+import { gql } from 'graphql-tag';
+//import {makeExecutableSchema} from 'graphql-tools';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@as-integrations/express5';
 //import { generateGame } from './generateQuestions.ts';
-let x = 1;
-let y = x;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const port = process.env.PORT || 9000;
+const port = process.env.PORT || "9000";
 const app = express();
+app.use(express.json());
 let con = mysql2.createConnection({
     host: "localhost",
     user: "root",
@@ -24,20 +25,44 @@ con.connect(function (err) {
     if (err)
         throw err;
 });
-app.use(express.static(path.join(__dirname, "/public")));
-app.use(express.json());
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, "/views"));
-function getHTML(req, res) {
-    res.status(200);
-    res.render('index');
-}
-function getQuestion(_root, args, _context, _info) {
+// GraphQLFieldResolver<TSource, TArgs, TContext>
+/*fieldResolver:
+ *    A resolver function to use when one is not provided by the schema.
+ *    If not provided, the default field resolver is used (which looks for a
+ *    value or method on the source value with the field's name).
+*/
+/*
+export declare type GraphQLTypeResolver<TSource, TContext> = (
+  value: TSource,
+  context: TContext,
+  info: GraphQLResolveInfo,
+  abstractType: GraphQLAbstractType,
+) => PromiseOrValue<string | undefined>;
+export declare type GraphQLIsTypeOfFn<TSource, TContext> = (
+  source: TSource,
+  context: TContext,
+  info: GraphQLResolveInfo,
+) => PromiseOrValue<boolean>;
+export declare type GraphQLFieldResolver<
+  TSource,
+  TContext,
+  TArgs = any,
+  TResult = unknown,
+> = (
+  source: TSource,
+  args: TArgs,
+  context: TContext,
+  info: GraphQLResolveInfo,
+) => TResult;
+*/
+function getQuestion(_source, args, _context, _info) {
     //const trivia: object[] = await getSquares();
     let id = args.id;
-    //console.log("id: " + id);
+    console.log("GET QUESTION");
+    console.log("id: " + id);
     completeSquare(id);
-    function promiseFunction(resolve, reject) {
+    console.log(id);
+    function questionPromise(resolve, reject) {
         con.query('SELECT question, answer FROM squares WHERE ID = ?;', id, (error, rows) => {
             if (error)
                 reject(error);
@@ -50,9 +75,9 @@ function getQuestion(_root, args, _context, _info) {
             }
         });
     }
-    return new Promise(promiseFunction);
+    return new Promise(questionPromise);
 }
-function updateScore(_root, args, _context, _info) {
+async function updateScore(_root, args, _context, _info) {
     //let task: string = args.task;
     //console.log(task)
     let updateQuery = '';
@@ -66,7 +91,7 @@ function updateScore(_root, args, _context, _info) {
     });
 }
 async function getScores(_root, _args, _context, _info) {
-    return new Promise((resolve, reject) => {
+    function scoresPromise(resolve, reject) {
         con.query('SELECT * FROM scores;', (error, rows) => {
             if (error)
                 reject(error);
@@ -77,7 +102,8 @@ async function getScores(_root, _args, _context, _info) {
                 resolve([{ player1: null, player2: null, player3: null }]);
             }
         });
-    });
+    }
+    return new Promise(scoresPromise);
 }
 async function reset(_root, _args, _context, _info) {
     let truncateScores = new Promise((resolve, reject) => {
@@ -141,6 +167,9 @@ async function getCategories(_root, _args, _context, _info) {
 function setQuestions(args) {
     //let query1: string = '';
     const categories = args;
+    if (categories == null) {
+        return;
+    }
     //const categories = [9, 10, 11, 12, 13, 14];
     console.log(categories);
     let insertQuery = "INSERT INTO squares(completed, question, answer, choice1, choice2, choice3, category) SELECT 0, question, answer, choice1, choice2, choice3, cat_name FROM Question_Bank WHERE cat_id = ?;";
@@ -178,6 +207,7 @@ function setQuestions(args) {
 }
 function setCategories(_root, args, _context, _info) {
     let Query = '';
+    console.log("SET CATEGORIES");
     console.log(args.categories);
     const categories = args.categories;
     //const categories = [9, 10, 11, 12, 13, 14];
@@ -194,7 +224,7 @@ function setCategories(_root, args, _context, _info) {
                 setQuestions(categories);
             }
             else {
-                setQuestions([]);
+                setQuestions(null);
             }
         });
     });
@@ -212,9 +242,32 @@ const resolvers = {
         setCategories: setCategories
     }
 };
-const typeDefs = fs.readFileSync('./schema.graphql', { encoding: 'utf-8' });
-const schema = makeExecutableSchema({ typeDefs, resolvers });
-app.use(cors(), bodyParser.json());
-app.use('/graphql', graphqlExpress({ schema }));
-app.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
-app.listen(port, () => console.info(`Server started on port ${port}`));
+/*
+const resolvers2 = {
+    Query: {que: (arg1:any,arg2: {
+        [id: string]: number
+
+    }, arg3:any) => {
+        var x = arg2.id;
+        x?.toString();
+    }},
+    Mutation: {},
+   
+};
+
+type myType = {[argument: string]:any};
+const myVar = {id: 1};
+const myVar2: myType = myVar;
+*/
+app.use(cors());
+const typeDefs = gql(readFileSync("schema.graphql", {
+    encoding: "utf-8",
+}));
+const server = new ApolloServer({
+    schema: buildSubgraphSchema({ typeDefs, resolvers }),
+});
+await server.start();
+app.use('/graphql', cors(), express.json(), expressMiddleware(server));
+app.listen(port, () => {
+    console.log(`Server is running on port: ${port}`);
+});
